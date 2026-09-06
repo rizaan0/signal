@@ -25,7 +25,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const user = await findUserByEmail(parsed.data.email);
+        let user;
+        try {
+          user = await findUserByEmail(parsed.data.email);
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : typeof error === "object" &&
+                  error &&
+                  "message" in error &&
+                  typeof error.message === "string"
+                ? error.message
+                : "Database error";
+          throw new Error(message);
+        }
         if (!user?.password_hash) {
           return null;
         }
