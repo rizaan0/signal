@@ -8,17 +8,17 @@ import {
   type ChatState,
   type MessageRow,
 } from "./actions";
-import type { AgentPlan } from "@/lib/agent";
+import type { AgentRun } from "@/lib/agent";
 
 // ─── Message rendering ────────────────────────────────────────────────────────
 
 function PlanBlock({
-  plan,
+  run,
   messageId,
   conversationId,
   onAction,
 }: {
-  plan: AgentPlan;
+  run: AgentRun;
   messageId: string;
   conversationId: string;
   onAction: (state: ChatState) => void;
@@ -39,15 +39,13 @@ function PlanBlock({
     });
   }
 
-  if (plan.status !== "pending") {
+  if (run.status !== "pending_approval") {
     const label =
-      plan.status === "cancelled"
+      run.status === "cancelled"
         ? "Cancelled"
-        : plan.status === "done"
+        : run.status === "done"
           ? "Executed"
-          : plan.status === "error"
-            ? "Failed"
-            : "Confirmed";
+          : "Failed";
     return (
       <span className="text-xs text-zinc-400 italic">[{label}]</span>
     );
@@ -83,7 +81,7 @@ function MessageBubble({
   onAction: (state: ChatState) => void;
 }) {
   const isUser = msg.role === "user";
-  const plan = msg.metadata?.plan;
+  const run = msg.metadata?.run;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -95,9 +93,9 @@ function MessageBubble({
         }`}
       >
         <pre className="whitespace-pre-wrap font-sans">{msg.content}</pre>
-        {plan && (
+        {run && (
           <PlanBlock
-            plan={plan}
+            run={run}
             messageId={msg.id}
             conversationId={conversationId}
             onAction={onAction}

@@ -11,6 +11,15 @@ function requiredEnv(name: string): string {
   return value;
 }
 
+export async function isUsersTableReady(): Promise<boolean> {
+  try {
+    const { error } = await getSupabase().from("users").select("id").limit(1);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 export function getSupabase(): SupabaseClient {
   if (!client) {
     client = createClient(
