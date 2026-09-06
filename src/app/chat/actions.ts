@@ -3,16 +3,21 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getSupabase } from "@/lib/supabase";
-import { buildPlan, executePlan, type AgentPlan } from "@/lib/agent";
+import {
+  cancelRun,
+  displayRunText,
+  resumeAgent,
+  runAgent,
+  type AgentRun,
+} from "@/lib/agent";
+import { LlmNotConfiguredError, type AgentMessage } from "@/lib/llm";
 import { GmailError } from "@/lib/gmail";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type MessageRow = {
   id: string;
   role: "user" | "assistant";
   content: string;
-  metadata: { plan?: AgentPlan } | null;
+  metadata: { run?: AgentRun } | null;
   created_at: string;
 };
 
@@ -21,8 +26,6 @@ export type ChatState = {
   messages: MessageRow[];
   error?: string;
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function loadMessages(conversationId: string): Promise<MessageRow[]> {
   const { data } = await getSupabase()
@@ -40,7 +43,6 @@ async function ensureConversation(
 ): Promise<string> {
   const db = getSupabase();
   if (conversationId) {
-    // Verify ownership
     const { data } = await db
       .from("conversations")
       .select("id")
@@ -57,7 +59,39 @@ async function ensureConversation(
   return data!.id;
 }
 
-// ─── Send message → plan ──────────────────────────────────────────────────────
+async function ownedConversation(
+  userId: string,
+  conversationId: string,
+): Promise<boolean> {
+  const { data } = await getSupabase()
+    .from("conversations")
+    .select("id")
+    .eq("id", conversationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  return Boolean(data);
+}
+
+function historyFromMessages(messages: MessageRow[]): AgentMessage[] {
+  return messages
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .slice(-12)
+    .map((m) => ({ role: m.role, content: m.content }));
+}
+
+function errorText(e: unknown): string {
+  if (e instanceof LlmNotConfiguredError) return e.message;
+  if (e instanceof GmailError) return `Error: ${e.message}`;
+  if (e instanceof Error) return `Error: ${e.message}`;
+  return "An unexpected error occurred.";
+}
+
+async function touchConversation(conversationId: string): Promise<void> {
+  await getSupabase()
+    .from("conversations")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", conversationId);
+}
 
 export async function sendMessage(
   conversationId: string | null,
@@ -77,39 +111,38 @@ export async function sendMessage(
 
   const db = getSupabase();
   const userId = session.user.id;
+  const convId = await ensureConversation(userId, conversationId, trimmed.slice(0, 50));
 
-  // Title = first 50 chars of command
-  const title = trimmed.slice(0, 50);
-  const convId = await ensureConversation(userId, conversationId, title);
-
-  // Save user message
   await db.from("conversation_messages").insert({
     conversation_id: convId,
     role: "user",
     content: trimmed,
   });
 
-  // Build agent plan
-  const plan = buildPlan(trimmed);
+  const prior = await loadMessages(convId);
 
-  // Save assistant message with plan in metadata
-  await db.from("conversation_messages").insert({
-    conversation_id: convId,
-    role: "assistant",
-    content: formatPlan(plan),
-    metadata: { plan },
-  });
+  try {
+    const run = await runAgent({
+      userId,
+      history: historyFromMessages(prior),
+    });
+    await db.from("conversation_messages").insert({
+      conversation_id: convId,
+      role: "assistant",
+      content: displayRunText(run),
+      metadata: { run },
+    });
+  } catch (e) {
+    await db.from("conversation_messages").insert({
+      conversation_id: convId,
+      role: "assistant",
+      content: errorText(e),
+    });
+  }
 
-  // Update conversation timestamp
-  await db
-    .from("conversations")
-    .update({ updated_at: new Date().toISOString() })
-    .eq("id", convId);
-
+  await touchConversation(convId);
   return { conversationId: convId, messages: await loadMessages(convId) };
 }
-
-// ─── Confirm plan execution ───────────────────────────────────────────────────
 
 export async function confirmPlan(
   conversationId: string,
@@ -121,68 +154,72 @@ export async function confirmPlan(
   const db = getSupabase();
   const userId = session.user.id;
 
-  // Load the plan message
+  if (!(await ownedConversation(userId, conversationId))) {
+    return {
+      conversationId,
+      messages: await loadMessages(conversationId),
+      error: "Conversation not found.",
+    };
+  }
+
   const { data: msgData } = await db
     .from("conversation_messages")
     .select("metadata")
     .eq("id", messageId)
+    .eq("conversation_id", conversationId)
     .maybeSingle();
 
-  const plan = (msgData?.metadata as { plan?: AgentPlan } | null)?.plan;
+  const run = (msgData?.metadata as { run?: AgentRun } | null)?.run;
 
-  if (!plan) {
+  if (!run || run.status !== "pending_approval" || !run.pendingToolCall) {
     return {
       conversationId,
       messages: await loadMessages(conversationId),
-      error: "Plan not found.",
+      error: "Nothing pending approval.",
     };
   }
 
-  // Mark plan as confirmed
-  await db
-    .from("conversation_messages")
-    .update({ metadata: { plan: { ...plan, status: "confirmed" } } })
-    .eq("id", messageId);
-
-  let resultContent: string;
-  let finalStatus: AgentPlan["status"] = "done";
-
   try {
-    const result = await executePlan(plan, userId);
-    resultContent = result.summary;
+    const next = await resumeAgent({ userId, run });
+    await db
+      .from("conversation_messages")
+      .update({
+        metadata: {
+          run: {
+            ...run,
+            status: "done",
+            pendingToolCall: undefined,
+          },
+        },
+      })
+      .eq("id", messageId)
+      .eq("conversation_id", conversationId);
+
+    await db.from("conversation_messages").insert({
+      conversation_id: conversationId,
+      role: "assistant",
+      content: displayRunText(next),
+      metadata: { run: next },
+    });
   } catch (e) {
-    finalStatus = "error";
-    if (e instanceof GmailError) {
-      resultContent = `Error: ${e.message}`;
-    } else if (e instanceof Error) {
-      resultContent = `Error: ${e.message}`;
-    } else {
-      resultContent = "An unexpected error occurred.";
-    }
+    await db
+      .from("conversation_messages")
+      .update({
+        metadata: { run: { ...run, status: "error", pendingToolCall: undefined } },
+      })
+      .eq("id", messageId)
+      .eq("conversation_id", conversationId);
+
+    await db.from("conversation_messages").insert({
+      conversation_id: conversationId,
+      role: "assistant",
+      content: errorText(e),
+    });
   }
 
-  // Update plan status in original message
-  await db
-    .from("conversation_messages")
-    .update({ metadata: { plan: { ...plan, status: finalStatus } } })
-    .eq("id", messageId);
-
-  // Append result message
-  await db.from("conversation_messages").insert({
-    conversation_id: conversationId,
-    role: "assistant",
-    content: resultContent,
-  });
-
-  await db
-    .from("conversations")
-    .update({ updated_at: new Date().toISOString() })
-    .eq("id", conversationId);
-
+  await touchConversation(conversationId);
   return { conversationId, messages: await loadMessages(conversationId) };
 }
-
-// ─── Cancel plan ──────────────────────────────────────────────────────────────
 
 export async function cancelPlan(
   conversationId: string,
@@ -192,21 +229,38 @@ export async function cancelPlan(
   if (!session?.user?.id) redirect("/login");
 
   const db = getSupabase();
+  const userId = session.user.id;
+
+  if (!(await ownedConversation(userId, conversationId))) {
+    return {
+      conversationId,
+      messages: await loadMessages(conversationId),
+      error: "Conversation not found.",
+    };
+  }
 
   const { data: msgData } = await db
     .from("conversation_messages")
     .select("metadata")
     .eq("id", messageId)
+    .eq("conversation_id", conversationId)
     .maybeSingle();
 
-  const plan = (msgData?.metadata as { plan?: AgentPlan } | null)?.plan;
+  const run = (msgData?.metadata as { run?: AgentRun } | null)?.run;
 
-  if (plan) {
-    await db
-      .from("conversation_messages")
-      .update({ metadata: { plan: { ...plan, status: "cancelled" } } })
-      .eq("id", messageId);
+  if (!run || run.status !== "pending_approval") {
+    return {
+      conversationId,
+      messages: await loadMessages(conversationId),
+      error: "Nothing pending approval.",
+    };
   }
+
+  await db
+    .from("conversation_messages")
+    .update({ metadata: { run: cancelRun(run) } })
+    .eq("id", messageId)
+    .eq("conversation_id", conversationId);
 
   await db.from("conversation_messages").insert({
     conversation_id: conversationId,
@@ -215,24 +269,4 @@ export async function cancelPlan(
   });
 
   return { conversationId, messages: await loadMessages(conversationId) };
-}
-
-// ─── Format plan for display ──────────────────────────────────────────────────
-
-function formatPlan(plan: AgentPlan): string {
-  const intentLabel: Record<AgentPlan["intent"], string> = {
-    read: "Read emails",
-    summarize: "Summarize emails",
-    archive: "Archive emails",
-    trash: "Trash emails",
-    flag: "Star emails",
-    reply: "Reply to emails",
-  };
-  const lines = [
-    `**${intentLabel[plan.intent]}** matching: \`${plan.query}\``,
-    "",
-    "Steps:",
-    ...plan.steps.map((s, i) => `${i + 1}. ${s.description}`),
-  ];
-  return lines.join("\n");
 }
