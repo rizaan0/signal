@@ -3,6 +3,7 @@
 import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
 import { safeCallbackUrl } from "@/lib/callback-url";
+import { isRedirectError, toUserDbError } from "@/lib/db-errors";
 
 export async function loginWithCredentials(
   _prev: { error?: string } | null,
@@ -17,10 +18,18 @@ export async function loginWithCredentials(
       redirectTo: callbackUrl,
     });
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     if (error instanceof AuthError) {
+      const cause =
+        "cause" in error && error.cause instanceof Error
+          ? error.cause.message
+          : "";
+      if (/Missing |Could not find the table/i.test(cause)) {
+        return { error: toUserDbError(error.cause) };
+      }
       return { error: "Invalid email or password." };
     }
-    throw error;
+    return { error: toUserDbError(error) };
   }
 
   return null;

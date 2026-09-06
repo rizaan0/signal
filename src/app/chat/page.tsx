@@ -3,8 +3,7 @@ import { auth } from "@/auth";
 import { getSupabase } from "@/lib/supabase";
 import { SignOutButton } from "@/app/sign-out-button";
 import { ChatInterface } from "./chat-interface";
-import type { ChatState } from "./actions";
-import type { AgentPlan } from "@/lib/agent";
+import type { ChatState, MessageRow } from "./actions";
 
 export default async function ChatPage() {
   const session = await auth();
@@ -48,13 +47,7 @@ export default async function ChatPage() {
 
     initialState = {
       conversationId: conv.id,
-      messages: (msgs ?? []) as Array<{
-        id: string;
-        role: "user" | "assistant";
-        content: string;
-        metadata: { plan?: AgentPlan } | null;
-        created_at: string;
-      }>,
+      messages: (msgs ?? []) as MessageRow[],
     };
   }
 

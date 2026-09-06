@@ -6,6 +6,7 @@ import { z } from "zod";
 import { signIn } from "@/auth";
 import { createPasswordUser } from "@/lib/auth-db";
 import { safeCallbackUrl } from "@/lib/callback-url";
+import { isRedirectError, toUserDbError } from "@/lib/db-errors";
 
 const registerSchema = z.object({
   name: z.string().trim().max(80).optional(),
@@ -28,11 +29,16 @@ export async function registerWithCredentials(
   }
 
   const passwordHash = await hash(parsed.data.password, 10);
-  const user = await createPasswordUser({
-    name: parsed.data.name,
-    email: parsed.data.email,
-    passwordHash,
-  });
+  let user;
+  try {
+    user = await createPasswordUser({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      passwordHash,
+    });
+  } catch (error) {
+    return { error: toUserDbError(error) };
+  }
 
   if (!user) {
     return { error: "An account with this email already exists." };
@@ -47,10 +53,11 @@ export async function registerWithCredentials(
       redirectTo: callbackUrl,
     });
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     if (error instanceof AuthError) {
       return { error: "Account created. Sign in failed — try logging in." };
     }
-    throw error;
+    return { error: toUserDbError(error) };
   }
 
   return null;
