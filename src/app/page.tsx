@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 
 export default async function Home() {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    session = null;
+  }
   if (session) {
     redirect("/onboarding");
   }
