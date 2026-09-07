@@ -58,6 +58,7 @@ export default async function ChatPage() {
         <div>
           <span className="text-sm font-semibold">Flash</span>
           <span className="ml-2 text-xs text-zinc-500">{session.user.email}</span>
+          <span className="ml-3 text-xs text-zinc-400">Inbox agent</span>
         </div>
         <SignOutButton />
       </header>
