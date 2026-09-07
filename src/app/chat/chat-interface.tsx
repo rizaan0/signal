@@ -108,6 +108,12 @@ function MessageBubble({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const SUGGESTIONS = [
+  "Summarize unread emails from this week",
+  "Archive all promotional emails",
+  "Star emails from my team",
+];
+
 export function ChatInterface({
   initialState,
 }: {
@@ -123,15 +129,19 @@ export function ChatInterface({
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   }
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!input.trim() || pending) return;
-    const command = input;
+  function sendCommand(command: string) {
+    const trimmed = command.trim();
+    if (!trimmed || pending) return;
     setInput("");
     startTransition(async () => {
-      const next = await sendMessage(state.conversationId || null, command);
+      const next = await sendMessage(state.conversationId || null, trimmed);
       handleAction(next);
     });
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    sendCommand(input);
   }
 
   return (
@@ -144,15 +154,17 @@ export function ChatInterface({
               Describe what you want to do with your inbox.
             </p>
             <div className="flex flex-col gap-1 text-xs">
-              <span className="rounded-full border border-zinc-200 px-3 py-1 dark:border-zinc-700">
-                "Summarize unread emails from this week"
-              </span>
-              <span className="rounded-full border border-zinc-200 px-3 py-1 dark:border-zinc-700">
-                "Archive all promotional emails"
-              </span>
-              <span className="rounded-full border border-zinc-200 px-3 py-1 dark:border-zinc-700">
-                "Star emails from my team"
-              </span>
+              {SUGGESTIONS.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => sendCommand(prompt)}
+                  className="rounded-full border border-zinc-200 px-3 py-1 transition-colors hover:border-zinc-400 hover:text-zinc-700 disabled:opacity-50 dark:border-zinc-700 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
           </div>
         )}
