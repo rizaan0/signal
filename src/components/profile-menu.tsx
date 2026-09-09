@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { AppUser } from "@/lib/app-data";
+import type { AppModalView } from "@/components/app-modal";
 import {
   ChevronDownIcon,
   HelpIcon,
@@ -25,9 +25,11 @@ function initials(name: string, email: string) {
 export function ProfileMenu({
   user,
   onNavigate,
+  onOpenModal,
 }: {
   user: AppUser;
   onNavigate?: () => void;
+  onOpenModal: (view: AppModalView) => void;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -59,8 +61,13 @@ export function ProfileMenu({
     onNavigate?.();
   }
 
+  function openModal(view: AppModalView) {
+    navigated();
+    onOpenModal(view);
+  }
+
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="on-white-surface relative text-primary">
       <button
         ref={buttonRef}
         type="button"
@@ -68,7 +75,7 @@ export function ProfileMenu({
         aria-controls="account-popover"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex min-h-14 w-full items-center gap-3 rounded-[1.1rem] bg-sidebar-active p-2 text-start transition-[background-color,scale] duration-150 hover:bg-surface-hover active:scale-[0.96]"
+        className="flex min-h-14 w-full items-center gap-3 rounded-[1.1rem] bg-transparent p-2 text-start transition-[scale] duration-150 active:scale-[0.96]"
       >
         <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent-solid text-sm font-semibold text-accent-contrast outline outline-1 outline-black/10 dark:outline-white/10">
           {user.image ? (
@@ -79,7 +86,7 @@ export function ProfileMenu({
         </span>
         <span className="min-w-0 flex-1">
           <span title={user.name} className="block truncate text-sm font-medium">{user.name}</span>
-          <span title={user.email} className="block truncate text-xs text-secondary">{user.email}</span>
+          <span title={user.email} className="block truncate text-xs text-primary">{user.email}</span>
         </span>
         <ChevronDownIcon className={`size-4 shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
@@ -89,20 +96,32 @@ export function ProfileMenu({
           ref={popoverRef}
           id="account-popover"
           aria-label="Account options"
-          className="absolute inset-x-0 bottom-[calc(100%+0.55rem)] rounded-[1.15rem] border border-ui bg-elevated p-1.5 shadow-menu"
+          className="absolute inset-x-0 bottom-[calc(100%+0.55rem)] rounded-[1.15rem] border border-ui bg-white p-1.5 text-primary shadow-menu"
         >
-          <Link href="/profile" onClick={navigated} className="menu-item">
+          <button
+            type="button"
+            onClick={() => openModal({ kind: "profile" })}
+            className="menu-item w-full"
+          >
             <UserIcon className="size-4" />
             Profile
-          </Link>
-          <Link href="/settings" onClick={navigated} className="menu-item">
+          </button>
+          <button
+            type="button"
+            onClick={() => openModal({ kind: "account" })}
+            className="menu-item w-full"
+          >
             <SettingsIcon className="size-4" />
-            Settings
-          </Link>
-          <Link href="/help" onClick={navigated} className="menu-item">
+            Account
+          </button>
+          <button
+            type="button"
+            onClick={() => openModal({ kind: "help" })}
+            className="menu-item w-full"
+          >
             <HelpIcon className="size-4" />
             Help
-          </Link>
+          </button>
           <div className="my-1 h-px bg-border-subtle" />
           <form action={logOut}>
             <button type="submit" className="menu-item w-full text-danger">
