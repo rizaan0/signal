@@ -6,10 +6,10 @@ export default function PrivacyPage() {
 
       <div className="mt-8 flex flex-col gap-6 text-sm leading-7 text-zinc-700 dark:text-zinc-300">
         <section>
-          <h2 className="font-semibold text-foreground">What Flash does</h2>
+          <h2 className="font-semibold text-foreground">What Signal does</h2>
           <p className="mt-2">
-            Flash is a Gmail agent that lets you manage your inbox using natural
-            language commands. You describe the task; Flash shows you a plan;
+            Signal is a Gmail agent that lets you manage your inbox using natural
+            language commands. You describe the task; Signal shows you a plan;
             you confirm before anything happens.
           </p>
         </section>
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="font-semibold text-foreground">Data we access</h2>
           <p className="mt-2">
-            With your explicit consent, Flash accesses your Gmail account to
+            With your explicit consent, Signal accesses your Gmail account to
             read, archive, trash, and flag messages. We access only what is
             necessary to execute the commands you approve.
           </p>
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           <h2 className="font-semibold text-foreground">Deleting your data</h2>
           <p className="mt-2">
             You can revoke Gmail access at any time via your Google Account
-            permissions page. Contact us to delete your Flash account and all
+            permissions page. Contact us to delete your Signal account and all
             stored data.
           </p>
         </section>

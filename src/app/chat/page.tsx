@@ -56,7 +56,7 @@ export default async function ChatPage() {
       {/* Header */}
       <header className="flex items-center justify-between border-b border-zinc-200 px-6 py-3 dark:border-zinc-800">
         <div>
-          <span className="text-sm font-semibold">Flash</span>
+          <span className="text-sm font-semibold">Signal</span>
           <span className="ml-2 text-xs text-zinc-500">{session.user.email}</span>
           <span className="ml-3 text-xs text-zinc-400">Inbox agent</span>
         </div>
