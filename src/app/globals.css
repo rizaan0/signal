@@ -168,7 +168,7 @@ summary::-webkit-details-marker {
   }
 
   .menu-item {
-    @apply flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm text-secondary transition-colors duration-150 hover:bg-surface-hover hover:text-primary;
+    @apply flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm text-primary transition-colors duration-150;
   }
 
   .page-container {
@@ -265,14 +265,19 @@ summary::-webkit-details-marker {
   }
 
   .composer {
-    @apply relative rounded-[1.4rem] border border-ui bg-elevated shadow-[0_8px_30px_rgb(25_25_40/0.08)] transition-[border-color,box-shadow] duration-150 focus-within:shadow-[0_10px_35px_rgb(25_25_40/0.12)];
+    @apply relative;
   }
 
-  .composer:has(:focus-visible) {
+  .composer-surface {
+    transition:
+      border-color 150ms,
+      background-color 150ms;
+  }
+
+  .composer:has(:focus-visible) .composer-surface {
     border-color: var(--accent);
-    box-shadow:
-      0 0 0 2px var(--accent),
-      0 10px 35px rgb(25 25 40 / 0.12);
+    border-width: 2px;
+    border-style: solid;
   }
 
   .composer-menu {
@@ -309,8 +314,55 @@ summary::-webkit-details-marker {
   }
 
   .bg-composer-fade {
-    background: linear-gradient(to bottom, transparent, var(--app) 2rem);
+    background: linear-gradient(to bottom, transparent, #ffffff 2rem);
   }
+}
+
+.on-white-surface {
+  color-scheme: light;
+  color: var(--text-primary);
+  --background: #f7f7fa;
+  --foreground: #1d1d24;
+  --app: #f7f7fa;
+  --sidebar: #f0f0f5;
+  --sidebar-active: #e4e4ec;
+  --elevated: #ffffff;
+  --surface: #f4f4f8;
+  --surface-hover: #eaeaf0;
+  --user-message: #ececf3;
+  --border-ui: #dedee7;
+  --border-subtle: #e9e9ef;
+  --border-strong: #c4c4d0;
+  --text-primary: #1d1d24;
+  --text-secondary: #626271;
+  --text-tertiary: #70707e;
+  --control-border: #90909d;
+  --ink: #25252d;
+  --ink-hover: #383842;
+  --ink-inverse: #ffffff;
+  --accent: #5c5ed2;
+  --accent-solid: #6466db;
+  --accent-contrast: #ffffff;
+  --accent-soft: #ededff;
+  --danger: #b83d4b;
+  --danger-soft: #fff0f1;
+  --danger-contrast: #ffffff;
+  --success: #287a55;
+}
+
+dialog.on-white-surface,
+dialog.on-white-surface:modal {
+  background-color: transparent;
+}
+
+.squircle-black-text,
+.squircle-black-text :where(
+  .text-primary,
+  .text-secondary,
+  .text-tertiary,
+  .text-accent
+) {
+  color: #000000;
 }
 
 @media (max-width: 640px) {
