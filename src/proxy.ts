@@ -15,5 +15,16 @@ export const proxy = auth((req) => {
 });
 
 export const config = {
-  matcher: ["/chat", "/chat/:path*", "/onboarding", "/onboarding/:path*"],
+  matcher: [
+    "/chat",
+    "/chat/:path*",
+    "/inbox",
+    "/search",
+    "/conversations",
+    "/profile",
+    "/settings",
+    "/help",
+    "/onboarding",
+    "/onboarding/:path*",
+  ],
 };
