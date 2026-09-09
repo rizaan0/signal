@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flash",
+  title: "Signal",
   description: "Natural-language Gmail agent",
 };
 

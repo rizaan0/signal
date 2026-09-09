@@ -17,7 +17,7 @@ export default async function Home() {
     <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-24 text-center">
       <div className="flex max-w-lg flex-col gap-4">
         <p className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-          Flash
+          Signal
         </p>
         <h1 className="text-4xl font-semibold tracking-tight">
           An email agent you control in plain language.
