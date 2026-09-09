@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import {
   completeTurn,
   type AgentMessage,
+  type ThinkingLevel,
   type ToolCall,
 } from "@/lib/llm";
 import {
@@ -18,6 +19,7 @@ export type AgentRun = {
   id: string;
   status: "pending_approval" | "cancelled" | "done" | "error";
   messages: AgentMessage[];
+  thinkingLevel: ThinkingLevel;
   pendingToolCall?: ToolCall;
 };
 
@@ -31,19 +33,10 @@ function lastAssistantText(messages: AgentMessage[]): string {
   return "";
 }
 
-export function formatPendingTool(call: ToolCall): string {
-  const args =
-    call.args && typeof call.args === "object"
-      ? JSON.stringify(call.args, null, 2)
-      : String(call.args ?? "");
-  return `**Approve ${call.name}**\n\n\`\`\`json\n${args}\n\`\`\``;
-}
-
 export function displayRunText(run: AgentRun): string {
   if (run.status === "pending_approval" && run.pendingToolCall) {
     const preface = lastAssistantText(run.messages);
-    const approval = formatPendingTool(run.pendingToolCall);
-    return preface ? `${preface}\n\n${approval}` : approval;
+    return preface || "Review this action before it runs.";
   }
   if (run.status === "error") {
     return lastAssistantText(run.messages) || "The agent stopped without a response.";
@@ -56,7 +49,11 @@ async function loop(userId: string, run: AgentRun): Promise<AgentRun> {
   const ctx = { userId, runId: run.id };
 
   for (let turn = 0; turn < MAX_TURNS; turn++) {
-    const result = await completeTurn({ messages: run.messages, tools });
+    const result = await completeTurn({
+      messages: run.messages,
+      tools,
+      thinkingLevel: run.thinkingLevel,
+    });
     const toolCalls = result.toolCalls ?? [];
 
     if (toolCalls.length === 0) {
@@ -121,11 +118,13 @@ async function loop(userId: string, run: AgentRun): Promise<AgentRun> {
 export async function runAgent(opts: {
   userId: string;
   history: AgentMessage[];
+  thinkingLevel: ThinkingLevel;
 }): Promise<AgentRun> {
   const run: AgentRun = {
     id: randomUUID(),
     status: "done",
     messages: opts.history,
+    thinkingLevel: opts.thinkingLevel,
   };
   return loop(opts.userId, run);
 }
@@ -134,6 +133,7 @@ export async function resumeAgent(opts: {
   userId: string;
   run: AgentRun;
 }): Promise<AgentRun> {
+  opts.run.thinkingLevel ??= "medium";
   const call = opts.run.pendingToolCall;
   if (!call || opts.run.status !== "pending_approval") {
     throw new Error("No pending tool call to approve.");
