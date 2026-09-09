@@ -155,21 +155,6 @@ function MessageBubble({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const SUGGESTIONS = [
-  {
-    title: "Catch me up",
-    prompt: "Summarize unread emails from this week",
-  },
-  {
-    title: "Clear distractions",
-    prompt: "Archive promotional emails older than one week",
-  },
-  {
-    title: "Find what matters",
-    prompt: "Show me unread emails from my team",
-  },
-];
-
 export function ChatInterface({
   initialState,
   firstName = "there",
@@ -232,7 +217,7 @@ export function ChatInterface({
   }
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <p className="sr-only" aria-live="polite">
         {pending
           ? "Signal is thinking."
@@ -242,7 +227,7 @@ export function ChatInterface({
             : ""}
       </p>
       {state.messages.length === 0 ? (
-        <div className="flex min-h-[calc(100dvh-3.5rem)] flex-1 items-center justify-center px-4 py-10 lg:min-h-dvh">
+        <div className="flex min-h-full flex-1 items-center justify-center px-4 py-10">
           <div className="w-full max-w-2xl">
             <div className="mb-8 text-center">
               <p className="eyebrow">Signal agent</p>
@@ -262,20 +247,6 @@ export function ChatInterface({
               thinkingLevel={thinkingLevel}
               onThinkingLevelChange={setThinkingLevel}
             />
-            <div className="mt-5 grid gap-2 sm:grid-cols-3">
-              {SUGGESTIONS.map((suggestion) => (
-                <button
-                  key={suggestion.prompt}
-                  type="button"
-                  disabled={pending}
-                  onClick={() => sendCommand(suggestion.prompt)}
-                  className="rounded-2xl border border-ui bg-elevated px-4 py-3 text-start transition-[border-color,background-color,scale] duration-150 hover:border-strong hover:bg-surface-hover active:scale-[0.96] disabled:opacity-50"
-                >
-                  <span className="block text-sm font-medium">{suggestion.title}</span>
-                  <span className="mt-1 block text-xs leading-5 text-secondary">{suggestion.prompt}</span>
-                </button>
-              ))}
-            </div>
             <p role="alert" className="mt-3 min-h-5 text-center text-sm text-danger">{state.error}</p>
           </div>
         </div>
