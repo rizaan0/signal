@@ -1,10 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import type { AppUser, ConversationSummary } from "@/lib/app-data";
+import { AppModal, type AppModalView } from "@/components/app-modal";
 import { AppSidebar } from "@/components/app-sidebar";
-import { CloseIcon, MenuIcon } from "@/components/icons";
+import { MenuIcon } from "@/components/icons";
+import { SquircleSurface } from "@/components/ui comp/ui comp/skiper63";
+
+const SIDEBAR_WIDTH = "17rem";
+const SIDEBAR_STORAGE_KEY = "signal-sidebar";
+const SIDEBAR_EVENT = "signal:sidebar-state";
+
+function subscribeToSidebarState(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(SIDEBAR_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(SIDEBAR_EVENT, onChange);
+  };
+}
+
+function readSidebarState() {
+  try {
+    return localStorage.getItem(SIDEBAR_STORAGE_KEY) !== "closed";
+  } catch {
+    return true;
+  }
+}
 
 export function AppShell({
   user,
@@ -15,7 +38,13 @@ export function AppShell({
   initialConversations: ConversationSummary[];
   children: React.ReactNode;
 }) {
+  const desktopOpen = useSyncExternalStore(
+    subscribeToSidebarState,
+    readSidebarState,
+    () => true,
+  );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [appModalView, setAppModalView] = useState<AppModalView | null>(null);
   const [conversations, setConversations] = useState(initialConversations);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -70,13 +99,58 @@ export function AppShell({
     });
   }, [pathname]);
 
+  function setSidebarOpen(open: boolean) {
+    try {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, open ? "open" : "closed");
+      window.dispatchEvent(new Event(SIDEBAR_EVENT));
+    } catch {
+      // Keep the current state if storage is unavailable.
+    }
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+    dialogRef.current?.close();
+  }
+
+  const closeAppModal = useCallback(() => {
+    setAppModalView(null);
+  }, []);
+
   return (
-    <div className="flex min-h-dvh bg-app">
+    <div className="flex h-dvh gap-2 overflow-hidden bg-white p-2">
       <a href="#main-content" className="skip-link">Skip to content</a>
 
-      <aside className="hidden w-[17rem] shrink-0 border-e border-ui bg-sidebar lg:block">
-        <AppSidebar user={user} conversations={conversations} />
-      </aside>
+      <div
+        className={`hidden h-full shrink-0 lg:block ${
+          desktopOpen ? "overflow-visible" : "overflow-hidden"
+        }`}
+        style={{
+          width: desktopOpen ? SIDEBAR_WIDTH : 0,
+          transition: "width 200ms cubic-bezier(0.2, 0, 0, 1)",
+        }}
+      >
+        <SquircleSurface
+          className="h-full"
+          contentClassName="squircle-black-text flex h-full min-h-0 flex-col"
+          surfaceClassName="bg-white"
+          seedRadius={20}
+          blurValue={8}
+          colorMatrixValue={20}
+          alphaValue={-7}
+          style={{ width: SIDEBAR_WIDTH }}
+        >
+          <aside aria-label="Sidebar" className="flex h-full min-h-0 flex-col">
+            <AppSidebar
+              user={user}
+              conversations={conversations}
+              onClose={() => setSidebarOpen(false)}
+              onOpenModal={setAppModalView}
+              closeLabel="Close sidebar"
+            />
+          </aside>
+        </SquircleSurface>
+      </div>
 
       <dialog
         ref={dialogRef}
@@ -90,49 +164,73 @@ export function AppShell({
             event.currentTarget.close();
           }
         }}
-        className="fixed inset-y-0 start-0 m-0 h-dvh max-h-none w-[min(19rem,88vw)] max-w-none overscroll-contain border-0 border-e border-ui bg-sidebar p-0 text-primary shadow-drawer backdrop:bg-overlay lg:hidden"
+        className="fixed inset-y-0 start-0 m-0 h-dvh max-h-none w-[min(19rem,88vw)] max-w-none overflow-visible overscroll-contain border-0 bg-transparent p-2 text-primary backdrop:bg-transparent lg:hidden"
       >
-        <aside aria-label="Mobile navigation" className="relative h-full pt-12">
-          <button
-            type="button"
-            aria-label="Close navigation"
-            autoFocus
-            onClick={() => {
-              dialogRef.current?.close();
-            }}
-            className="absolute end-3 top-3 z-10 flex size-10 items-center justify-center rounded-full hover:bg-surface-hover"
-          >
-            <CloseIcon className="size-5" />
-          </button>
-          <AppSidebar
-            user={user}
-            conversations={conversations}
-            onNavigate={() => {
-                setDrawerOpen(false);
-              dialogRef.current?.close();
-            }}
-          />
-        </aside>
+        <SquircleSurface
+          className="h-full w-full"
+          contentClassName="squircle-black-text"
+          surfaceClassName="bg-white"
+          seedRadius={20}
+          blurValue={8}
+          colorMatrixValue={20}
+          alphaValue={-7}
+        >
+          <aside aria-label="Mobile navigation" className="h-full">
+            <AppSidebar
+              user={user}
+              conversations={conversations}
+              onClose={closeDrawer}
+              closeLabel="Close navigation"
+              onNavigate={closeDrawer}
+              onOpenModal={setAppModalView}
+            />
+          </aside>
+        </SquircleSurface>
       </dialog>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center border-b border-ui bg-elevated px-3 lg:hidden">
+      <SquircleSurface
+        className="min-h-0 min-w-0 flex-1"
+        contentClassName="squircle-black-text flex min-h-0 flex-col"
+        surfaceClassName="bg-white"
+        seedRadius={20}
+        blurValue={8}
+        colorMatrixValue={20}
+        alphaValue={-7}
+      >
+        <header
+          className={`flex h-14 shrink-0 items-center border-b border-ui px-3 ${
+            desktopOpen ? "lg:hidden" : ""
+          }`}
+        >
           <button
             ref={menuButtonRef}
             type="button"
-            aria-label="Open navigation"
-            aria-expanded={drawerOpen}
-            onClick={() => setDrawerOpen(true)}
-            className="flex size-10 items-center justify-center rounded-full hover:bg-surface-hover"
+            aria-label="Open sidebar"
+            aria-expanded={drawerOpen || desktopOpen}
+            onClick={() => {
+              if (window.matchMedia("(min-width: 64rem)").matches) {
+                setSidebarOpen(true);
+                return;
+              }
+              setDrawerOpen(true);
+            }}
+            className="flex size-10 items-center justify-center rounded-full"
           >
             <MenuIcon className="size-5" />
           </button>
           <span className="ms-2 text-sm font-semibold">Signal</span>
         </header>
-        <main id="main-content" className="min-h-0 flex-1 overflow-auto outline-none">
+        <main id="main-content" className="m-1 min-h-0 flex-1 overflow-auto outline-none">
           {children}
         </main>
-      </div>
+      </SquircleSurface>
+
+      <AppModal
+        view={appModalView}
+        user={user}
+        onClose={closeAppModal}
+        onChangeView={setAppModalView}
+      />
     </div>
   );
 }
