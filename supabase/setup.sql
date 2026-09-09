@@ -90,6 +90,18 @@ create table if not exists audit_logs (
 create index if not exists audit_logs_user_id_created_at_idx
   on audit_logs (user_id, created_at);
 
+create table if not exists user_preferences (
+  user_id uuid primary key references users (id) on delete cascade,
+  theme text not null default 'system'
+    check (theme in ('light', 'dark', 'system')),
+  default_thinking_level text not null default 'medium'
+    check (default_thinking_level in ('low', 'medium', 'high')),
+  notify_agent_completion boolean not null default false,
+  notify_approval_needed boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 alter table users enable row level security;
 alter table accounts enable row level security;
 alter table sessions enable row level security;
@@ -98,5 +110,6 @@ alter table gmail_accounts enable row level security;
 alter table conversations enable row level security;
 alter table conversation_messages enable row level security;
 alter table audit_logs enable row level security;
+alter table user_preferences enable row level security;
 
 notify pgrst, 'reload schema';
