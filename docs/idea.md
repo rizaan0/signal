@@ -14,7 +14,7 @@ Existing solutions fall short in three key ways:
 
 ## The Opportunity
 
-Flash solves this by giving users an autonomous email agent they control through natural language. Instead of manually processing every message, users issue high-level commands:
+Signal solves this by giving users an autonomous email agent they control through natural language. Instead of manually processing every message, users issue high-level commands:
 
 - *"Reply to all unread emails from my team with a status update"*
 - *"Summarize and archive all promotional emails from this week"*
