@@ -18,6 +18,8 @@ export type LlmTurn = {
   toolCalls?: ToolCall[];
 };
 
+export type ThinkingLevel = "low" | "medium" | "high";
+
 export class LlmNotConfiguredError extends Error {
   constructor() {
     super(
@@ -132,6 +134,7 @@ function toGeminiContents(messages: AgentMessage[]): GeminiContent[] {
 async function completeGemini(input: {
   messages: AgentMessage[];
   tools: { name: string; description: string; schema: unknown }[];
+  thinkingLevel: ThinkingLevel;
 }): Promise<LlmTurn> {
   const key = apiKey();
   if (!key) throw new LlmNotConfiguredError();
@@ -159,6 +162,11 @@ async function completeGemini(input: {
         tools: [{ functionDeclarations }],
         toolConfig: {
           functionCallingConfig: { mode: "AUTO" },
+        },
+        generationConfig: {
+          thinkingConfig: {
+            thinkingLevel: input.thinkingLevel.toUpperCase(),
+          },
         },
       }),
     },
@@ -202,6 +210,7 @@ async function completeGemini(input: {
 export async function completeTurn(input: {
   messages: AgentMessage[];
   tools: { name: string; description: string; schema: unknown }[];
+  thinkingLevel: ThinkingLevel;
 }): Promise<LlmTurn> {
   const kind = provider();
   if (!apiKey()) throw new LlmNotConfiguredError();
