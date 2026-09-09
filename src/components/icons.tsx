@@ -55,6 +55,15 @@ export function MenuIcon(props: IconProps) {
   return <IconBase {...props}><path d="M4 7h16M4 12h16M4 17h16" /></IconBase>;
 }
 
+export function PanelLeftIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <rect x="3.5" y="4" width="17" height="16" rx="2.5" />
+      <path d="M9.5 4v16" />
+    </IconBase>
+  );
+}
+
 export function CloseIcon(props: IconProps) {
   return <IconBase {...props}><path d="m6 6 12 12M18 6 6 18" /></IconBase>;
 }
