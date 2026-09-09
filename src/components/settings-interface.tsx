@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { AppUser, ThinkingLevel, ThemePreference } from "@/lib/app-data";
+import type { AppUser, ThinkingLevel } from "@/lib/app-data";
 import type { GmailAccount } from "@/components/mail-list";
 import {
   BellIcon,
@@ -13,13 +13,12 @@ import {
 } from "@/components/icons";
 import { usePreferences } from "@/components/preferences-provider";
 import {
-  changePassword,
   deleteAllConversations,
   saveDisplayName,
 } from "@/app/(app)/settings/actions";
 import { logOut } from "@/app/(app)/actions";
 
-type Section = "account" | "gmail" | "notifications" | "privacy";
+export type SettingsSection = "account" | "gmail" | "notifications" | "privacy";
 
 const SECTIONS = [
   { id: "account" as const, label: "Account", icon: UserIcon },
@@ -76,24 +75,30 @@ function Toggle({
 export function SettingsInterface({
   user,
   initialAccounts,
+  embedded = false,
+  initialSection = "account",
+  onClose,
+  showClose = true,
 }: {
   user: AppUser;
   initialAccounts: GmailAccount[];
+  embedded?: boolean;
+  initialSection?: SettingsSection;
+  onClose?: () => void;
+  showClose?: boolean;
 }) {
-  const [section, setSection] = useState<Section>("account");
+  const [section, setSection] = useState<SettingsSection>(initialSection);
   const [accounts, setAccounts] = useState(initialAccounts);
   const [disconnectCandidate, setDisconnectCandidate] = useState<GmailAccount | null>(null);
   const [disconnecting, setDisconnecting] = useState(false);
   const [preferenceError, setPreferenceError] = useState("");
   const [gmailError, setGmailError] = useState("");
   const [displayState, displayAction, displayPending] = useActionState(saveDisplayName, null);
-  const [passwordState, passwordAction, passwordPending] = useActionState(changePassword, null);
   const [deleteState, deleteAction, deletePending] = useActionState(deleteAllConversations, null);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const currentPasswordRef = useRef<HTMLInputElement>(null);
   const deleteConfirmationRef = useRef<HTMLInputElement>(null);
   const disconnectDialogRef = useRef<HTMLDialogElement>(null);
-  const { preferences, setTheme, setThinkingLevel, setNotificationPreference } =
+  const { preferences, setThinkingLevel, setNotificationPreference } =
     usePreferences();
   const router = useRouter();
 
@@ -103,26 +108,14 @@ export function SettingsInterface({
   }, [displayState, router]);
 
   useEffect(() => {
-    if (passwordState?.error) currentPasswordRef.current?.focus();
-  }, [passwordState]);
-
-  useEffect(() => {
     if (deleteState?.success) {
       window.dispatchEvent(new Event("signal:conversations-changed"));
-      router.push("/chat");
+      if (embedded) onClose?.();
+      else router.push("/chat");
       router.refresh();
     }
     if (deleteState?.error) deleteConfirmationRef.current?.focus();
-  }, [deleteState, router]);
-
-  async function updateTheme(theme: ThemePreference) {
-    setPreferenceError("");
-    try {
-      await setTheme(theme);
-    } catch (reason) {
-      setPreferenceError(reason instanceof Error ? reason.message : "Unable to save theme.");
-    }
-  }
+  }, [deleteState, embedded, onClose, router]);
 
   async function updateReasoning(level: ThinkingLevel) {
     setPreferenceError("");
@@ -211,7 +204,13 @@ export function SettingsInterface({
   }
 
   return (
-    <section className="flex min-h-full items-center justify-center p-3 sm:p-6">
+    <section
+      className={
+        embedded
+          ? "h-full min-h-0"
+          : "flex min-h-full items-center justify-center p-3 sm:p-6"
+      }
+    >
       <dialog
         ref={disconnectDialogRef}
         aria-labelledby="disconnect-gmail-title"
@@ -227,7 +226,7 @@ export function SettingsInterface({
             event.currentTarget.close();
           }
         }}
-        className="m-auto w-[calc(100%_-_2rem)] max-w-md rounded-3xl border border-ui bg-elevated p-0 text-primary shadow-panel backdrop:bg-overlay"
+        className="on-white-surface m-auto w-[calc(100%_-_2rem)] max-w-md rounded-3xl border border-ui bg-white p-0 text-primary shadow-panel backdrop:bg-overlay"
       >
         <div className="p-6">
           <h2 id="disconnect-gmail-title" className="text-lg font-semibold">
@@ -263,8 +262,14 @@ export function SettingsInterface({
         </div>
       </dialog>
 
-      <div className="flex min-h-[min(44rem,calc(100dvh-3rem))] w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-ui bg-elevated shadow-panel">
-        <aside className="hidden w-52 shrink-0 flex-col bg-sidebar p-3 md:flex">
+      <div
+        className={
+          embedded
+            ? "flex h-full min-h-0 w-full overflow-hidden bg-transparent"
+            : "flex min-h-[min(44rem,calc(100dvh-3rem))] w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-ui bg-elevated shadow-panel"
+        }
+      >
+        <aside className={`hidden w-52 shrink-0 flex-col p-3 md:flex ${embedded ? "bg-white" : "bg-sidebar"}`}>
           <p className="px-3 py-2 text-xs text-tertiary">Settings</p>
           <nav aria-label="Settings sections" className="space-y-1">
             {SECTIONS.map(({ id, label, icon: Icon }) => (
@@ -273,8 +278,8 @@ export function SettingsInterface({
                 type="button"
                 onClick={() => setSection(id)}
                 aria-current={section === id ? "page" : undefined}
-                className={`sidebar-link w-full ${
-                  section === id ? "bg-sidebar-active text-primary" : "text-secondary hover:bg-surface-hover"
+                className={`sidebar-link w-full text-primary ${
+                  section === id ? "font-semibold" : ""
                 }`}
               >
                 <Icon className="size-4" />
@@ -292,14 +297,19 @@ export function SettingsInterface({
             <h1 className="text-lg font-semibold">
               {SECTIONS.find((item) => item.id === section)?.label}
             </h1>
-            <button
-              type="button"
-              aria-label="Close settings"
-              onClick={() => router.back()}
-              className="flex size-10 items-center justify-center rounded-full bg-surface hover:bg-surface-hover"
-            >
-              <CloseIcon className="size-4" />
-            </button>
+            {showClose ? (
+              <button
+                type="button"
+                aria-label="Close settings"
+                onClick={() => {
+                  if (onClose) onClose();
+                  else router.back();
+                }}
+                className="flex size-10 items-center justify-center rounded-full bg-white text-primary"
+              >
+                <CloseIcon className="size-4" />
+              </button>
+            ) : null}
           </header>
 
           <nav aria-label="Settings sections" className="border-b border-ui p-2 md:hidden">
@@ -310,8 +320,8 @@ export function SettingsInterface({
                   type="button"
                   aria-current={section === id ? "page" : undefined}
                   onClick={() => setSection(id)}
-                  className={`min-h-10 rounded-xl px-3 text-sm ${
-                    section === id ? "bg-sidebar-active font-medium" : "text-secondary"
+                  className={`min-h-10 rounded-xl px-3 text-sm text-primary ${
+                    section === id ? "font-semibold" : ""
                   }`}
                 >
                   {label}
@@ -362,23 +372,6 @@ export function SettingsInterface({
 
                 <div className="settings-group">
                   <div>
-                    <h2 className="section-title">Appearance</h2>
-                    <p className="section-description">Choose how Signal looks on this device.</p>
-                  </div>
-                  <div className="segmented-control" role="group" aria-label="Theme">
-                    {(["light", "dark", "system"] as const).map((theme) => (
-                      <button
-                        key={theme}
-                        type="button"
-                        aria-pressed={preferences.theme === theme}
-                        onClick={() => void updateTheme(theme)}
-                        className="capitalize"
-                      >
-                        {theme}
-                      </button>
-                    ))}
-                  </div>
-                  <div>
                     <h2 className="section-title">Default reasoning</h2>
                     <p className="section-description">Used for new agent requests unless you override it.</p>
                   </div>
@@ -397,51 +390,6 @@ export function SettingsInterface({
                   </div>
                   <p role="alert" className="min-h-5 text-sm text-danger">{preferenceError}</p>
                 </div>
-
-                <form action={passwordAction} className="settings-group">
-                  <div>
-                    <h2 className="section-title">Password</h2>
-                    <p className="section-description">
-                      {user.hasPassword
-                        ? "Verify your current password before choosing a new one."
-                        : "This Google-only account does not use a Signal password."}
-                    </p>
-                  </div>
-                  {user.hasPassword ? (
-                    <>
-                      <label className="form-label">
-                        Current password
-                        <input
-                          ref={currentPasswordRef}
-                          name="currentPassword"
-                          type="password"
-                          autoComplete="current-password"
-                          required
-                          aria-invalid={Boolean(passwordState?.error)}
-                          aria-describedby="password-message"
-                          className="field"
-                        />
-                      </label>
-                      <label className="form-label">
-                        New password
-                        <input
-                          name="newPassword"
-                          type="password"
-                          autoComplete="new-password"
-                          minLength={8}
-                          required
-                          aria-invalid={Boolean(passwordState?.error)}
-                          aria-describedby="password-message"
-                          className="field"
-                        />
-                      </label>
-                      <ActionMessage id="password-message" state={passwordState} />
-                      <button type="submit" disabled={passwordPending} className="button-secondary self-start">
-                        {passwordPending ? "Updating…" : "Change password"}
-                      </button>
-                    </>
-                  ) : null}
-                </form>
               </div>
             ) : null}
 
