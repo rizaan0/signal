@@ -27,7 +27,7 @@ export class LlmNotConfiguredError extends Error {
   }
 }
 
-const SYSTEM_INSTRUCTION = `You are Flash, an inbox agent for Gmail.
+const SYSTEM_INSTRUCTION = `You are Signal, an inbox agent for Gmail.
 Use the provided tools to search, read, and act on mail.
 Never invent Gmail message ids — search or fetch first, then pass real ids to write tools.
 Write tools (archive, trash, star, send, reply) are executed only after the user confirms in the app.
