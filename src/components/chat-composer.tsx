@@ -7,6 +7,7 @@ import {
   MicIcon,
   SendIcon,
 } from "@/components/icons";
+import { SquircleSurface } from "@/components/ui comp/ui comp/skiper63";
 
 type SpeechResultEvent = {
   results: ArrayLike<{
@@ -126,7 +127,15 @@ export function ChatComposer({
   }
 
   return (
-    <div className="composer">
+    <SquircleSurface
+      className="composer"
+      contentClassName="squircle-black-text flex flex-col"
+      surfaceClassName="composer-surface bg-white"
+      seedRadius={18}
+      blurValue={7}
+      colorMatrixValue={20}
+      alphaValue={-7}
+    >
       <label htmlFor="agent-message" className="sr-only">Message Signal</label>
       <textarea
         ref={textareaRef}
@@ -220,6 +229,6 @@ export function ChatComposer({
         {validationError}
       </p>
       <p className="sr-only" aria-live="polite">{speechStatus}</p>
-    </div>
+    </SquircleSurface>
   );
 }
