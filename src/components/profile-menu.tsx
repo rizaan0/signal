@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { AppUser } from "@/lib/app-data";
@@ -14,19 +13,13 @@ import {
 } from "@/components/icons";
 import { logOut } from "@/app/(app)/actions";
 import {
-  liquidExitTransition,
+  liquidEnter,
+  liquidIdle,
+  liquidLeave,
+  liquidMorphTransition,
   liquidReducedTransition,
-  liquidSurfaceTransition,
 } from "@/lib/liquid-motion";
-
-function initials(name: string, email: string) {
-  const source = name.trim() || email.split("@")[0] || "S";
-  return source
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
+import { GlassButton } from "@/components/ui/glass-button";
 
 export function ProfileMenu({
   user,
@@ -39,8 +32,7 @@ export function ProfileMenu({
 }) {
   const [open, setOpen] = useState(false);
   const reduceMotion = useReducedMotion();
-  const enter = reduceMotion ? liquidReducedTransition : liquidSurfaceTransition;
-  const exit = reduceMotion ? liquidReducedTransition : liquidExitTransition;
+  const transition = reduceMotion ? liquidReducedTransition : liquidMorphTransition;
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -77,28 +69,23 @@ export function ProfileMenu({
 
   return (
     <div ref={rootRef} className="on-white-surface relative text-primary">
-      <button
+      <GlassButton
         ref={buttonRef}
         type="button"
+        size="nav"
+        className="w-full"
+        style={{ paddingInlineStart: "1.75rem", paddingInlineEnd: "1.15rem" }}
         aria-haspopup="true"
         aria-controls="account-popover"
         aria-expanded={open}
+        aria-label={user.name.trim() || "Account menu"}
         onClick={() => setOpen((value) => !value)}
-        className="flex min-h-14 w-full items-center gap-3 rounded-[1.1rem] bg-transparent p-2 text-start transition-[scale] duration-150 active:scale-[0.96]"
       >
-        <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent-solid text-sm font-semibold text-accent-contrast outline outline-1 outline-black/10 dark:outline-white/10">
-          {user.image ? (
-            <Image src={user.image} alt="" width={40} height={40} unoptimized />
-          ) : (
-            initials(user.name, user.email)
-          )}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span title={user.name} className="block truncate text-sm font-medium">{user.name}</span>
-          <span title={user.email} className="block truncate text-xs text-primary">{user.email}</span>
+        <span title={user.name} className="min-w-0 flex-1 truncate text-start text-sm font-medium">
+          {user.name.trim() || "Account"}
         </span>
         <ChevronDownIcon className={`size-4 shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
-      </button>
+      </GlassButton>
 
       <AnimatePresence initial={false}>
         {open ? (
@@ -107,10 +94,15 @@ export function ProfileMenu({
             id="account-popover"
             aria-label="Account options"
             className="absolute inset-x-0 bottom-[calc(100%+0.55rem)] rounded-[1.15rem] border border-ui bg-white p-1.5 text-primary shadow-menu"
-            initial={reduceMotion ? false : { opacity: 0, y: 12, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -12, filter: "blur(4px)", transition: exit }}
-            transition={enter}
+            initial={reduceMotion ? false : liquidEnter}
+            animate={liquidIdle}
+            exit={
+              reduceMotion
+                ? { opacity: 0, transition: liquidReducedTransition }
+                : liquidLeave
+            }
+            transition={transition}
+            style={{ transformOrigin: "50% 100%" }}
           >
           <button
             type="button"

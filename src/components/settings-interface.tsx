@@ -17,6 +17,8 @@ import {
   saveDisplayName,
 } from "@/app/(app)/settings/actions";
 import { logOut } from "@/app/(app)/actions";
+import { GlassButton } from "@/components/ui/glass-button";
+import { THINKING_LEVEL_COPY } from "@/lib/model-display";
 
 export type SettingsSection = "account" | "gmail" | "notifications" | "privacy";
 
@@ -273,22 +275,24 @@ export function SettingsInterface({
           <p className="px-3 py-2 text-xs text-tertiary">Settings</p>
           <nav aria-label="Settings sections" className="space-y-1">
             {SECTIONS.map(({ id, label, icon: Icon }) => (
-              <button
+              <GlassButton
                 key={id}
                 type="button"
+                size="nav"
+                className="w-full"
                 onClick={() => setSection(id)}
                 aria-current={section === id ? "page" : undefined}
-                className={`sidebar-link w-full text-primary ${
-                  section === id ? "font-semibold" : ""
-                }`}
+                contentClassName={section === id ? "font-semibold" : undefined}
               >
                 <Icon className="size-4" />
                 {label}
-              </button>
+              </GlassButton>
             ))}
           </nav>
           <form action={logOut} className="mt-auto">
-            <button type="submit" className="button-danger w-full">Log out</button>
+            <GlassButton type="submit" size="sm" wrapperClassName="w-full" className="w-full">
+              Log out
+            </GlassButton>
           </form>
         </aside>
 
@@ -315,17 +319,17 @@ export function SettingsInterface({
           <nav aria-label="Settings sections" className="border-b border-ui p-2 md:hidden">
             <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
               {SECTIONS.map(({ id, label }) => (
-                <button
+                <GlassButton
                   key={id}
                   type="button"
+                  size="nav"
+                  className="w-full"
                   aria-current={section === id ? "page" : undefined}
                   onClick={() => setSection(id)}
-                  className={`min-h-10 rounded-xl px-3 text-sm text-primary ${
-                    section === id ? "font-semibold" : ""
-                  }`}
+                  contentClassName={`justify-center px-3 ${section === id ? "font-semibold" : ""}`}
                 >
                   {label}
-                </button>
+                </GlassButton>
               ))}
             </div>
           </nav>
@@ -365,9 +369,9 @@ export function SettingsInterface({
                     />
                   </label>
                   <ActionMessage id="display-name-message" state={displayState} />
-                  <button type="submit" disabled={displayPending} className="button-primary self-start">
+                  <GlassButton type="submit" size="sm" disabled={displayPending} wrapperClassName="self-start">
                     {displayPending ? "Saving…" : "Save name"}
-                  </button>
+                  </GlassButton>
                 </form>
 
                 <div className="settings-group">
@@ -382,9 +386,8 @@ export function SettingsInterface({
                         type="button"
                         aria-pressed={preferences.defaultThinkingLevel === level}
                         onClick={() => void updateReasoning(level)}
-                        className="capitalize"
                       >
-                        {level}
+                        {THINKING_LEVEL_COPY[level].label}
                       </button>
                     ))}
                   </div>
@@ -413,9 +416,9 @@ export function SettingsInterface({
                     </div>
                   ))}
                 </div>
-                <button type="button" onClick={() => void connectGmail()} className="button-primary">
+                <GlassButton type="button" size="sm" onClick={() => void connectGmail()} wrapperClassName="self-start">
                   Connect another account
-                </button>
+                </GlassButton>
                 <p role="alert" className="min-h-5 text-sm text-danger">{gmailError}</p>
               </div>
             ) : null}
@@ -467,9 +470,9 @@ export function SettingsInterface({
                     />
                   </label>
                   <ActionMessage id="delete-conversations-message" state={deleteState} />
-                  <button type="submit" disabled={deletePending} className="button-danger">
+                  <GlassButton type="submit" size="sm" tone="danger" disabled={deletePending} wrapperClassName="mt-4 self-start">
                     {deletePending ? "Deleting…" : "Delete all conversations"}
-                  </button>
+                  </GlassButton>
                 </form>
               </div>
             ) : null}
