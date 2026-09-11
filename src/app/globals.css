@@ -355,6 +355,25 @@ dialog.on-white-surface:modal {
   background-color: transparent;
 }
 
+.liquid-move {
+  transition-property: width, max-width, transform, opacity, filter;
+  transition-duration: 320ms;
+  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.liquid-morph {
+  transition-property: max-width, width, transform, opacity, filter;
+  transition-duration: 620ms;
+  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-move,
+  .liquid-morph {
+    transition-duration: 0.01ms;
+  }
+}
+
 .squircle-black-text,
 .squircle-black-text :where(
   .text-primary,

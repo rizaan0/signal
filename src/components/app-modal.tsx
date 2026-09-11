@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { AppUser } from "@/lib/app-data";
 import type { GmailAccount } from "@/components/mail-list";
 import type { SettingsSection } from "@/components/settings-interface";
 import { CloseIcon } from "@/components/icons";
 import { HelpInterface } from "@/components/help-interface";
+import { LiquidPresence } from "@/components/liquid-presence";
 import { ProfileInterface } from "@/components/profile-interface";
 import { SettingsInterface } from "@/components/settings-interface";
 import { SquircleSurface } from "@/components/ui comp/skiper63";
+import {
+  liquidExitTransition,
+  liquidReducedTransition,
+  liquidSurfaceTransition,
+} from "@/lib/liquid-motion";
 
 export type AppModalView =
   | { kind: "profile" }
@@ -32,19 +39,23 @@ export function AppModal({
   onChangeView: (view: AppModalView) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const reduceMotion = useReducedMotion();
   const [reloadKey, setReloadKey] = useState(0);
   const [accountsState, setAccountsState] = useState<AccountsState>({
     status: "idle",
     accounts: [],
     error: "",
   });
-  const needsAccounts = view?.kind === "profile" || view?.kind === "account";
+  const [active, setActive] = useState(view);
+  if (view && view !== active) {
+    setActive(view);
+  }
+  const needsAccounts = active?.kind === "profile" || active?.kind === "account";
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (view && !dialog.open) dialog.showModal();
-    if (!view && dialog.open) dialog.close();
   }, [view]);
 
   useEffect(() => {
@@ -79,95 +90,125 @@ export function AppModal({
       });
 
     return () => controller.abort();
-  }, [needsAccounts, reloadKey, view?.kind]);
+  }, [needsAccounts, reloadKey, active?.kind]);
 
   const title =
-    view?.kind === "profile" ? "Profile" : view?.kind === "account" ? "Account" : "Help";
-  const wide = view?.kind === "account";
+    active?.kind === "profile" ? "Profile" : active?.kind === "account" ? "Account" : "Help";
+  const wide = active?.kind === "account";
+  const enter = reduceMotion ? liquidReducedTransition : liquidSurfaceTransition;
+  const exit = reduceMotion ? liquidReducedTransition : liquidExitTransition;
 
   return (
     <dialog
       ref={dialogRef}
       aria-label={title}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
       onClose={() => {
         if (view) onClose();
       }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) event.currentTarget.close();
+        if (event.target === event.currentTarget) onClose();
       }}
-      className={`on-white-surface fixed inset-0 m-auto h-[min(52rem,calc(100dvh-2rem))] w-[calc(100%_-_2rem)] overflow-visible border-0 bg-transparent p-3 text-primary backdrop:bg-overlay backdrop:backdrop-blur-sm ${
+      className={`liquid-morph on-white-surface fixed inset-0 m-auto h-[min(52rem,calc(100dvh-2rem))] w-[calc(100%_-_2rem)] overflow-visible border-0 bg-transparent p-3 text-primary backdrop:bg-overlay backdrop:backdrop-blur-sm ${
         wide ? "max-w-6xl" : "max-w-4xl"
       }`}
     >
-      <SquircleSurface
-        className="h-full w-full"
-        contentClassName="squircle-black-text h-full min-h-0 overflow-hidden"
-        surfaceClassName="bg-white"
-        seedRadius={20}
-        blurValue={8}
-        colorMatrixValue={20}
-        alphaValue={-7}
+      <AnimatePresence
+        initial={false}
+        onExitComplete={() => {
+          dialogRef.current?.close();
+        }}
       >
-        <button
-          type="button"
-          aria-label={`Close ${title.toLowerCase()}`}
-          onClick={onClose}
-          className="absolute end-4 top-4 z-10 flex size-10 items-center justify-center rounded-full bg-white text-primary"
-        >
-          <CloseIcon className="size-4" />
-        </button>
-
-        {needsAccounts &&
-        (accountsState.status === "idle" || accountsState.status === "loading") ? (
-          <div className="flex h-full items-center justify-center p-8 text-sm text-secondary" role="status">
-            Loading {title.toLowerCase()}…
-          </div>
-        ) : null}
-
-        {needsAccounts && accountsState.status === "error" ? (
-          <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-            <p role="alert" className="text-sm text-danger">{accountsState.error}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setAccountsState({ status: "loading", accounts: [], error: "" });
-                setReloadKey((key) => key + 1);
-              }}
-              className="button-secondary"
+        {view ? (
+          <motion.div
+            key="app-modal-surface"
+            className="h-full w-full"
+            initial={reduceMotion ? false : { opacity: 0, y: 12, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -12, filter: "blur(4px)", transition: exit }}
+            transition={enter}
+          >
+            <SquircleSurface
+              className="h-full w-full"
+              contentClassName="squircle-black-text h-full min-h-0 overflow-hidden"
+              surfaceClassName="bg-white"
+              seedRadius={20}
+              blurValue={8}
+              colorMatrixValue={20}
+              alphaValue={-7}
             >
-              Try again
-            </button>
-          </div>
-        ) : null}
+              <button
+                type="button"
+                aria-label={`Close ${title.toLowerCase()}`}
+                onClick={onClose}
+                className="absolute end-4 top-4 z-10 flex size-10 items-center justify-center rounded-full bg-white text-primary"
+              >
+                <CloseIcon className="size-4" />
+              </button>
 
-        {view?.kind === "profile" && accountsState.status === "ready" ? (
-          <ProfileInterface
-            user={user}
-            accounts={accountsState.accounts}
-            embedded
-            onOpenAccount={(section) => onChangeView({ kind: "account", section })}
-          />
-        ) : null}
+              <LiquidPresence
+                id={active?.kind ?? "closed"}
+                className="h-full min-h-0"
+                morph
+              >
+                {needsAccounts &&
+                (accountsState.status === "idle" || accountsState.status === "loading") ? (
+                  <div className="flex h-full items-center justify-center p-8 text-sm text-secondary" role="status">
+                    Loading {title.toLowerCase()}…
+                  </div>
+                ) : null}
 
-        {view?.kind === "account" && accountsState.status === "ready" ? (
-          <SettingsInterface
-            key={view.section ?? "account"}
-            user={user}
-            initialAccounts={accountsState.accounts}
-            initialSection={view.section}
-            embedded
-            onClose={onClose}
-            showClose={false}
-          />
-        ) : null}
+                {needsAccounts && accountsState.status === "error" ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                    <p role="alert" className="text-sm text-danger">{accountsState.error}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountsState({ status: "loading", accounts: [], error: "" });
+                        setReloadKey((key) => key + 1);
+                      }}
+                      className="button-secondary"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                ) : null}
 
-        {view?.kind === "help" ? (
-          <HelpInterface
-            embedded
-            onOpenAccount={() => onChangeView({ kind: "account" })}
-          />
+                {active?.kind === "profile" && accountsState.status === "ready" ? (
+                  <ProfileInterface
+                    user={user}
+                    accounts={accountsState.accounts}
+                    embedded
+                    onOpenAccount={(section) => onChangeView({ kind: "account", section })}
+                  />
+                ) : null}
+
+                {active?.kind === "account" && accountsState.status === "ready" ? (
+                  <SettingsInterface
+                    key={active.section ?? "account"}
+                    user={user}
+                    initialAccounts={accountsState.accounts}
+                    initialSection={active.section}
+                    embedded
+                    onClose={onClose}
+                    showClose={false}
+                  />
+                ) : null}
+
+                {active?.kind === "help" ? (
+                  <HelpInterface
+                    embedded
+                    onOpenAccount={() => onChangeView({ kind: "account" })}
+                  />
+                ) : null}
+              </LiquidPresence>
+            </SquircleSurface>
+          </motion.div>
         ) : null}
-      </SquircleSurface>
+      </AnimatePresence>
     </dialog>
   );
 }

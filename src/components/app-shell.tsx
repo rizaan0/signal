@@ -7,6 +7,8 @@ import { AppModal, type AppModalView } from "@/components/app-modal";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MenuIcon } from "@/components/icons";
 import { SquircleSurface } from "@/components/ui comp/skiper63";
+import { liquidReducedTransition, liquidSurfaceTransition } from "@/lib/liquid-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 const SIDEBAR_WIDTH = "17rem";
 const SIDEBAR_STORAGE_KEY = "signal-sidebar";
@@ -43,6 +45,7 @@ export function AppShell({
     readSidebarState,
     () => true,
   );
+  const reduceMotion = useReducedMotion();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [appModalView, setAppModalView] = useState<AppModalView | null>(null);
   const [conversations, setConversations] = useState(initialConversations);
@@ -122,12 +125,11 @@ export function AppShell({
       <a href="#main-content" className="skip-link">Skip to content</a>
 
       <div
-        className={`hidden h-full shrink-0 lg:block ${
+        className={`liquid-move hidden h-full shrink-0 lg:block ${
           desktopOpen ? "overflow-visible" : "overflow-hidden"
         }`}
         style={{
           width: desktopOpen ? SIDEBAR_WIDTH : 0,
-          transition: "width 200ms cubic-bezier(0.2, 0, 0, 1)",
         }}
       >
         <SquircleSurface
@@ -166,26 +168,39 @@ export function AppShell({
         }}
         className="fixed inset-y-0 start-0 m-0 h-dvh max-h-none w-[min(19rem,88vw)] max-w-none overflow-visible overscroll-contain border-0 bg-transparent p-2 text-primary backdrop:bg-transparent lg:hidden"
       >
-        <SquircleSurface
+        <motion.div
           className="h-full w-full"
-          contentClassName="squircle-black-text"
-          surfaceClassName="bg-white"
-          seedRadius={20}
-          blurValue={8}
-          colorMatrixValue={20}
-          alphaValue={-7}
+          initial={false}
+          animate={
+            reduceMotion
+              ? { x: 0, opacity: 1 }
+              : drawerOpen
+                ? { x: 0, opacity: 1, filter: "blur(0px)" }
+                : { x: -24, opacity: 0, filter: "blur(4px)" }
+          }
+          transition={reduceMotion ? liquidReducedTransition : liquidSurfaceTransition}
         >
-          <aside aria-label="Mobile navigation" className="h-full">
-            <AppSidebar
-              user={user}
-              conversations={conversations}
-              onClose={closeDrawer}
-              closeLabel="Close navigation"
-              onNavigate={closeDrawer}
-              onOpenModal={setAppModalView}
-            />
-          </aside>
-        </SquircleSurface>
+          <SquircleSurface
+            className="h-full w-full"
+            contentClassName="squircle-black-text"
+            surfaceClassName="bg-white"
+            seedRadius={20}
+            blurValue={8}
+            colorMatrixValue={20}
+            alphaValue={-7}
+          >
+            <aside aria-label="Mobile navigation" className="h-full">
+              <AppSidebar
+                user={user}
+                conversations={conversations}
+                onClose={closeDrawer}
+                closeLabel="Close navigation"
+                onNavigate={closeDrawer}
+                onOpenModal={setAppModalView}
+              />
+            </aside>
+          </SquircleSurface>
+        </motion.div>
       </dialog>
 
       <SquircleSurface

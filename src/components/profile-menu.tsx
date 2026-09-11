@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { AppUser } from "@/lib/app-data";
 import type { AppModalView } from "@/components/app-modal";
 import {
@@ -12,6 +13,11 @@ import {
   UserIcon,
 } from "@/components/icons";
 import { logOut } from "@/app/(app)/actions";
+import {
+  liquidExitTransition,
+  liquidReducedTransition,
+  liquidSurfaceTransition,
+} from "@/lib/liquid-motion";
 
 function initials(name: string, email: string) {
   const source = name.trim() || email.split("@")[0] || "S";
@@ -32,6 +38,9 @@ export function ProfileMenu({
   onOpenModal: (view: AppModalView) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const enter = reduceMotion ? liquidReducedTransition : liquidSurfaceTransition;
+  const exit = reduceMotion ? liquidReducedTransition : liquidExitTransition;
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -91,13 +100,18 @@ export function ProfileMenu({
         <ChevronDownIcon className={`size-4 shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {open ? (
-        <div
-          ref={popoverRef}
-          id="account-popover"
-          aria-label="Account options"
-          className="absolute inset-x-0 bottom-[calc(100%+0.55rem)] rounded-[1.15rem] border border-ui bg-white p-1.5 text-primary shadow-menu"
-        >
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            ref={popoverRef}
+            id="account-popover"
+            aria-label="Account options"
+            className="absolute inset-x-0 bottom-[calc(100%+0.55rem)] rounded-[1.15rem] border border-ui bg-white p-1.5 text-primary shadow-menu"
+            initial={reduceMotion ? false : { opacity: 0, y: 12, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -12, filter: "blur(4px)", transition: exit }}
+            transition={enter}
+          >
           <button
             type="button"
             onClick={() => openModal({ kind: "profile" })}
@@ -129,8 +143,9 @@ export function ProfileMenu({
               Log out
             </button>
           </form>
-        </div>
-      ) : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
     </div>
   );
