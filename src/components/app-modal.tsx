@@ -12,9 +12,11 @@ import { ProfileInterface } from "@/components/profile-interface";
 import { SettingsInterface } from "@/components/settings-interface";
 import { SquircleSurface } from "@/components/ui comp/skiper63";
 import {
-  liquidExitTransition,
+  liquidEnter,
+  liquidIdle,
+  liquidLeave,
+  liquidMorphTransition,
   liquidReducedTransition,
-  liquidSurfaceTransition,
 } from "@/lib/liquid-motion";
 
 export type AppModalView =
@@ -95,8 +97,7 @@ export function AppModal({
   const title =
     active?.kind === "profile" ? "Profile" : active?.kind === "account" ? "Account" : "Help";
   const wide = active?.kind === "account";
-  const enter = reduceMotion ? liquidReducedTransition : liquidSurfaceTransition;
-  const exit = reduceMotion ? liquidReducedTransition : liquidExitTransition;
+  const enter = reduceMotion ? liquidReducedTransition : liquidMorphTransition;
 
   return (
     <dialog
@@ -126,10 +127,16 @@ export function AppModal({
           <motion.div
             key="app-modal-surface"
             className="h-full w-full"
-            initial={reduceMotion ? false : { opacity: 0, y: 12, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -12, filter: "blur(4px)", transition: exit }}
+            initial={reduceMotion ? false : liquidEnter}
+            animate={liquidIdle}
+            exit={
+              reduceMotion
+                ? { opacity: 0, transition: liquidReducedTransition }
+                : liquidLeave
+            }
             transition={enter}
+            layout
+            style={{ transformOrigin: "50% 42%" }}
           >
             <SquircleSurface
               className="h-full w-full"
@@ -152,7 +159,6 @@ export function AppModal({
               <LiquidPresence
                 id={active?.kind ?? "closed"}
                 className="h-full min-h-0"
-                morph
               >
                 {needsAccounts &&
                 (accountsState.status === "idle" || accountsState.status === "loading") ? (
