@@ -6,7 +6,7 @@ import type { AppUser, ConversationSummary } from "@/lib/app-data";
 import { AppModal, type AppModalView } from "@/components/app-modal";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MenuIcon } from "@/components/icons";
-import { SquircleSurface } from "@/components/ui comp/ui comp/skiper63";
+import { SquircleSurface } from "@/components/ui comp/skiper63";
 
 const SIDEBAR_WIDTH = "17rem";
 const SIDEBAR_STORAGE_KEY = "signal-sidebar";

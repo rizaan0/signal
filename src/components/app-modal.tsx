@@ -8,7 +8,7 @@ import { CloseIcon } from "@/components/icons";
 import { HelpInterface } from "@/components/help-interface";
 import { ProfileInterface } from "@/components/profile-interface";
 import { SettingsInterface } from "@/components/settings-interface";
-import { SquircleSurface } from "@/components/ui comp/ui comp/skiper63";
+import { SquircleSurface } from "@/components/ui comp/skiper63";
 
 export type AppModalView =
   | { kind: "profile" }

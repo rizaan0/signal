@@ -7,7 +7,7 @@ import {
   MicIcon,
   SendIcon,
 } from "@/components/icons";
-import { SquircleSurface } from "@/components/ui comp/ui comp/skiper63";
+import { SquircleSurface } from "@/components/ui comp/skiper63";
 
 type SpeechResultEvent = {
   results: ArrayLike<{
