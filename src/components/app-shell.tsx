@@ -7,7 +7,13 @@ import { AppModal, type AppModalView } from "@/components/app-modal";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MenuIcon } from "@/components/icons";
 import { SquircleSurface } from "@/components/ui comp/skiper63";
-import { liquidReducedTransition, liquidSurfaceTransition } from "@/lib/liquid-motion";
+import {
+  liquidDrawerHidden,
+  liquidIdle,
+  liquidLeaveTransition,
+  liquidReducedTransition,
+  liquidMorphTransition,
+} from "@/lib/liquid-motion";
 import { motion, useReducedMotion } from "framer-motion";
 
 const SIDEBAR_WIDTH = "17rem";
@@ -172,13 +178,15 @@ export function AppShell({
           className="h-full w-full"
           initial={false}
           animate={
-            reduceMotion
-              ? { x: 0, opacity: 1 }
-              : drawerOpen
-                ? { x: 0, opacity: 1, filter: "blur(0px)" }
-                : { x: -24, opacity: 0, filter: "blur(4px)" }
+            reduceMotion || drawerOpen ? liquidIdle : liquidDrawerHidden
           }
-          transition={reduceMotion ? liquidReducedTransition : liquidSurfaceTransition}
+          transition={
+            reduceMotion
+              ? liquidReducedTransition
+              : drawerOpen
+                ? liquidMorphTransition
+                : liquidLeaveTransition
+          }
         >
           <SquircleSurface
             className="h-full w-full"
