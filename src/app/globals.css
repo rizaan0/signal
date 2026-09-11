@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+button,
+a,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
 :root {
   color-scheme: light;
   --background: #f7f7fa;
@@ -171,6 +177,18 @@ summary::-webkit-details-marker {
     @apply flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm text-primary transition-colors duration-150;
   }
 
+  .menu-item:hover,
+  .menu-item:active,
+  .menu-item:focus,
+  .menu-item:focus-visible,
+  .sidebar-link:hover,
+  .sidebar-link:active,
+  .sidebar-link:focus,
+  .sidebar-link:focus-visible {
+    background-color: transparent;
+    background-image: none;
+  }
+
   .page-container {
     @apply mx-auto w-full max-w-4xl px-4 py-8 sm:px-8 sm:py-12;
   }
@@ -224,11 +242,11 @@ summary::-webkit-details-marker {
   }
 
   .button-primary {
-    @apply bg-ink text-ink-inverse hover:bg-ink-hover;
+    @apply bg-ink text-ink-inverse;
   }
 
   .button-secondary {
-    @apply border border-ui bg-elevated text-primary hover:border-strong hover:bg-surface-hover;
+    @apply border border-ui bg-elevated text-primary hover:border-strong;
   }
 
   .button-danger {
@@ -244,11 +262,16 @@ summary::-webkit-details-marker {
   }
 
   .segmented-control button {
-    @apply min-h-10 rounded-lg px-3 text-sm text-secondary transition-colors duration-150 hover:text-primary;
+    @apply min-h-10 rounded-lg px-3 text-sm text-secondary transition-colors duration-150 hover:text-primary hover:bg-transparent active:bg-transparent;
   }
 
   .segmented-control button[aria-pressed="true"] {
     @apply bg-elevated font-medium text-primary shadow-sm;
+  }
+
+  .segmented-control button[aria-pressed="true"]:hover,
+  .segmented-control button[aria-pressed="true"]:active {
+    @apply bg-elevated;
   }
 
   .toggle {
@@ -265,7 +288,7 @@ summary::-webkit-details-marker {
   }
 
   .composer {
-    @apply relative;
+    @apply relative overflow-visible;
   }
 
   .composer-surface {
@@ -285,19 +308,54 @@ summary::-webkit-details-marker {
   }
 
   .composer-menu > summary {
-    @apply flex min-h-10 list-none items-center gap-1.5 rounded-xl px-2.5 text-xs text-secondary hover:bg-surface-hover hover:text-primary;
+    @apply flex min-h-8 list-none items-center gap-1 px-2.5 text-[11px] font-medium leading-none text-primary;
+  }
+
+  .composer-menu > summary:hover,
+  .composer-menu > summary:active,
+  .composer-menu > summary:focus {
+    background-color: transparent;
+  }
+
+  .composer-menu > summary::-webkit-details-marker {
+    display: none;
   }
 
   .composer-popover {
-    @apply absolute bottom-[calc(100%+0.5rem)] z-20 min-w-44 overflow-hidden rounded-xl border border-ui bg-elevated p-1 shadow-menu;
+    @apply absolute top-[calc(100%+0.4rem)] z-30 min-w-48 overflow-hidden rounded-[1.15rem] border border-ui bg-white p-1 shadow-menu text-xs;
+  }
+
+  .composer-popover-model {
+    @apply min-w-max rounded-full px-3 py-2 text-xs;
+    background: linear-gradient(180deg, #f4f7fb 0%, #e4ebf3 100%);
   }
 
   .composer-popover button {
-    @apply min-h-10 rounded-lg px-3 text-xs text-secondary hover:bg-surface-hover hover:text-primary;
+    @apply flex min-h-8 w-full items-center gap-2 rounded-full px-2.5 text-start text-xs text-primary;
+    appearance: none;
+    background-color: transparent;
+    background-image: none;
   }
 
-  .composer-popover button[aria-pressed="true"] {
-    @apply bg-accent-soft text-accent;
+  .composer-popover button:hover,
+  .composer-popover button:active,
+  .composer-popover button:focus,
+  .composer-popover button:focus-visible {
+    background-color: transparent;
+    background-image: none;
+  }
+
+  .composer-popover button[aria-pressed="true"],
+  .composer-popover button[aria-pressed="true"]:hover,
+  .composer-popover button[aria-pressed="true"]:active,
+  .composer-popover button[aria-pressed="true"]:focus {
+    @apply font-medium text-primary;
+    background-color: transparent;
+    background-image: linear-gradient(180deg, #f4f7fb 0%, #e4ebf3 100%);
+  }
+
+  .composer-option-desc {
+    @apply text-[11px] font-normal text-secondary;
   }
 
   .composer-icon-button,
@@ -306,11 +364,15 @@ summary::-webkit-details-marker {
   }
 
   .composer-icon-button {
-    @apply text-secondary hover:bg-surface-hover hover:text-primary;
+    @apply bg-transparent text-secondary hover:bg-transparent hover:text-secondary active:bg-transparent;
+  }
+
+  .composer-icon-button[aria-pressed="true"] {
+    @apply bg-accent-soft text-accent hover:bg-accent-soft hover:text-accent active:bg-accent-soft;
   }
 
   .composer-send {
-    @apply bg-ink text-ink-inverse hover:bg-ink-hover;
+    @apply bg-ink text-ink-inverse;
   }
 
   .bg-composer-fade {
@@ -355,14 +417,9 @@ dialog.on-white-surface:modal {
   background-color: transparent;
 }
 
-.liquid-move {
-  transition-property: width, max-width, transform, opacity, filter;
-  transition-duration: 320ms;
-  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
-}
-
+.liquid-move,
 .liquid-morph {
-  transition-property: max-width, width, transform, opacity, filter;
+  transition-property: width, max-width;
   transition-duration: 620ms;
   transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
 }
@@ -375,14 +432,14 @@ dialog.on-white-surface:modal {
 }
 
 .squircle-black-text,
-.squircle-black-text :where(
-  .text-primary,
-  .text-secondary,
-  .text-tertiary,
-  .text-accent
-) {
+.squircle-black-text :where(.text-primary, .text-secondary, .text-tertiary, .text-accent) {
   color: #000000;
 }
+
+.squircle-black-text :where(.text-white, .text-ink-inverse) {
+  color: #ffffff;
+}
+
 
 @media (max-width: 640px) {
   input,
