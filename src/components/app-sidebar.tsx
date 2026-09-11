@@ -12,6 +12,7 @@ import {
   SearchIcon,
 } from "@/components/icons";
 import { ProfileMenu } from "@/components/profile-menu";
+import { GlassButton } from "@/components/ui/glass-button";
 
 const NAVIGATION = [
   { href: "/inbox", label: "Inbox", icon: InboxIcon },
@@ -58,29 +59,28 @@ export function AppSidebar({
         ) : null}
       </div>
 
-      <Link
-        href="/chat"
-        onClick={onNavigate}
-        className="flex min-h-11 items-center gap-3 rounded-[1rem] bg-ink px-4 text-sm font-semibold text-ink-inverse shadow-button transition-[scale] duration-150 active:scale-[0.96]"
-      >
-        <PlusIcon className="size-4" strokeWidth={2} />
-        New chat
-      </Link>
+      <GlassButton asChild size="sidebar" tone="inverse" className="w-full">
+        <Link href="/chat" onClick={onNavigate} className="!text-white">
+          <PlusIcon className="size-4 text-white" strokeWidth={2} />
+          New chat
+        </Link>
+      </GlassButton>
 
       <nav aria-label="Primary" className="mt-4 space-y-1">
         {NAVIGATION.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onNavigate}
-              aria-current={active ? "page" : undefined}
-              className={`sidebar-link ${active ? "font-semibold text-primary" : "text-secondary hover:text-primary"}`}
-            >
-              <Icon className="size-[1.1rem]" />
-              {label}
-            </Link>
+            <GlassButton asChild key={href} size="nav" className="w-full">
+              <Link
+                href={href}
+                onClick={onNavigate}
+                aria-current={active ? "page" : undefined}
+                className={active ? "font-semibold text-primary" : "text-secondary"}
+              >
+                <Icon className="size-[1.1rem]" />
+                {label}
+              </Link>
+            </GlassButton>
           );
         })}
       </nav>
