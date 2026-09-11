@@ -230,13 +230,9 @@ export function ChatInterface({
         <div className="flex min-h-full flex-1 items-center justify-center px-4 py-10">
           <div className="w-full max-w-2xl">
             <div className="mb-8 text-center">
-              <p className="eyebrow">Signal agent</p>
-              <h1 className="mt-3 text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+              <h1 className="text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
                 {greeting}, {firstName}.
               </h1>
-              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-secondary">
-                What would you like to accomplish in your inbox?
-              </p>
             </div>
             <ChatComposer
               value={input}
@@ -280,7 +276,7 @@ export function ChatInterface({
               <div ref={bottomRef} />
             </div>
           </div>
-          <div className="sticky bottom-0 bg-composer-fade px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8">
+          <div className="sticky bottom-0 overflow-visible bg-composer-fade px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8">
             <div className="mx-auto max-w-3xl">
               <ChatComposer
                 value={input}

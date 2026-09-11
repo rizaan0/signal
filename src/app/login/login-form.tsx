@@ -12,7 +12,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <button
           type="submit"
-          className="flex h-11 w-full items-center justify-center rounded-full border border-black/[.08] text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
+          className="flex h-11 w-full items-center justify-center rounded-full border border-black/[.08] text-sm font-medium dark:border-white/[.145]"
         >
           Continue with Google
         </button>
