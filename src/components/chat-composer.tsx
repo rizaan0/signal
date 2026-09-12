@@ -9,6 +9,7 @@ import {
   SendIcon,
 } from "@/components/icons";
 import { SquircleSurface } from "@/components/ui comp/skiper63";
+import { SmoothTextarea } from "@/components/ui comp/skiper106";
 import { GlassButton } from "@/components/ui/glass-button";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
 import {
@@ -178,7 +179,7 @@ export function ChatComposer({
       alphaValue={-7}
     >
       <label htmlFor="agent-message" className="sr-only">Message Signal</label>
-      <textarea
+      <SmoothTextarea
         ref={textareaRef}
         id="agent-message"
         rows={1}
