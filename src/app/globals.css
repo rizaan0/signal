@@ -345,10 +345,10 @@ summary::-webkit-details-marker {
     background-image: none;
   }
 
-  .composer-popover button[aria-pressed="true"],
-  .composer-popover button[aria-pressed="true"]:hover,
-  .composer-popover button[aria-pressed="true"]:active,
-  .composer-popover button[aria-pressed="true"]:focus {
+  .composer-popover button[aria-selected="true"],
+  .composer-popover button[aria-selected="true"]:hover,
+  .composer-popover button[aria-selected="true"]:active,
+  .composer-popover button[aria-selected="true"]:focus {
     @apply font-medium text-primary;
     background-color: transparent;
     background-image: linear-gradient(180deg, #f4f7fb 0%, #e4ebf3 100%);
