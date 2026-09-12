@@ -18,6 +18,7 @@ import {
 } from "@/app/(app)/settings/actions";
 import { logOut } from "@/app/(app)/actions";
 import { GlassButton } from "@/components/ui/glass-button";
+import { SmoothInput } from "@/components/ui comp/skiper106";
 import { THINKING_LEVEL_COPY } from "@/lib/model-display";
 
 export type SettingsSection = "account" | "gmail" | "notifications" | "privacy";
@@ -344,7 +345,7 @@ export function SettingsInterface({
                   </div>
                   <label className="form-label">
                     Display name
-                    <input
+                    <SmoothInput
                       ref={nameInputRef}
                       name="name"
                       defaultValue={user.name}
@@ -459,7 +460,7 @@ export function SettingsInterface({
                   </p>
                   <label className="form-label mt-4">
                     Type DELETE to confirm
-                    <input
+                    <SmoothInput
                       ref={deleteConfirmationRef}
                       name="confirmation"
                       className="field max-w-xs"
