@@ -270,7 +270,6 @@ export function ChatComposer({
                     type="button"
                     role="option"
                     aria-selected={thinkingLevel === level}
-                    aria-pressed={thinkingLevel === level}
                     onClick={() => {
                       onThinkingLevelChange(level);
                       setOpenMenu(null);
