@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { loginWithGoogle } from "../login/actions";
 import { registerWithCredentials } from "./actions";
+import { SmoothInput } from "@/components/ui comp/skiper106";
 
 export function RegisterForm({
   callbackUrl,
@@ -64,7 +65,7 @@ export function RegisterForm({
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <label className="flex flex-col gap-1 text-sm">
           Name
-          <input
+          <SmoothInput
             name="name"
             type="text"
             autoComplete="name"
@@ -73,7 +74,7 @@ export function RegisterForm({
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Email
-          <input
+          <SmoothInput
             name="email"
             type="email"
             required
@@ -83,7 +84,7 @@ export function RegisterForm({
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Password
-          <input
+          <SmoothInput
             name="password"
             type="password"
             required
