@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import type { ConversationSummary } from "@/lib/app-data";
 import type { GmailMessage } from "@/components/mail-list";
 import { ChevronDownIcon, HistoryIcon, MailIcon, SearchIcon } from "@/components/icons";
+import { SmoothInput } from "@/components/ui comp/skiper106";
 
 export function CombinedSearch() {
   const [query, setQuery] = useState("");
@@ -75,7 +76,7 @@ export function CombinedSearch() {
           Search Gmail and conversations
         </label>
         <SearchIcon className="pointer-events-none absolute start-4 top-1/2 size-5 -translate-y-1/2 text-tertiary" />
-        <input
+        <SmoothInput
           ref={inputRef}
           id="global-search"
           type="search"
