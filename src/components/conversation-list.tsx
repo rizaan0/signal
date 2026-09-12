@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { ConversationSummary } from "@/lib/app-data";
 import { SearchIcon } from "@/components/icons";
+import { SmoothInput } from "@/components/ui comp/skiper106";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -51,7 +52,7 @@ export function ConversationList({
           Search conversations
         </label>
         <SearchIcon className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-tertiary" />
-        <input
+        <SmoothInput
           id="conversation-search"
           type="search"
           value={query}
