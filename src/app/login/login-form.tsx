@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { loginWithCredentials, loginWithGoogle } from "./actions";
+import { SmoothInput } from "@/components/ui comp/skiper106";
 
 export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
   const [state, action, pending] = useActionState(loginWithCredentials, null);
@@ -28,7 +29,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <label className="flex flex-col gap-1 text-sm">
           Email
-          <input
+          <SmoothInput
             name="email"
             type="email"
             required
@@ -38,7 +39,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Password
-          <input
+          <SmoothInput
             name="password"
             type="password"
             required
